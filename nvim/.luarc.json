@@ -1,0 +1,5 @@
+{
+  "completion.callSnippet": "Replace",
+  "completion.displayContext": 1,
+  "diagnostics.globals": ["vim"]
+}

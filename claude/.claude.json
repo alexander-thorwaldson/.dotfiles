@@ -1,0 +1,17 @@
+{
+  "firstStartTime": "2026-03-15T23:20:34.644Z",
+  "opusProMigrationComplete": true,
+  "sonnet1m45MigrationComplete": true,
+  "userID": "e80386c52db3121161cca11bedf6fae7d3e5dfb7f85cad2a703ebb66bbbc29ce",
+  "changelogLastFetched": 1773616834917,
+  "oauthAccount": {
+    "accountUuid": "b32cbd0e-badf-43fa-90ce-4de8882bf100",
+    "emailAddress": "alex@zoobz.io",
+    "organizationUuid": "42841b6c-fd04-4839-a323-b21f967dcf22",
+    "hasExtraUsageEnabled": true,
+    "billingType": "stripe_subscription",
+    "accountCreatedAt": "2025-06-21T16:20:15.657345Z",
+    "subscriptionCreatedAt": "2025-06-21T16:21:24.522471Z",
+    "displayName": "alex"
+  }
+}

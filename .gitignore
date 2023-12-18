@@ -1,0 +1,29 @@
+### FISH
+fish_plugins
+fish_variables
+fish/functions
+fish/completions
+
+### CLAUDE
+claude/.claude.json
+claude/memory/
+claude/.credentials.json
+claude/history.jsonl
+claude/stats-cache.json
+claude/mcp-needs-auth-cache.json
+claude/backups/
+claude/cache/
+claude/debug/
+claude/file-history/
+claude/local/
+claude/paste-cache/
+claude/plans/
+claude/plugins/
+claude/projects/
+claude/session-env/
+claude/shell-snapshots/
+claude/statsig/
+claude/tasks/
+claude/teams/
+claude/telemetry/
+claude/todos/
