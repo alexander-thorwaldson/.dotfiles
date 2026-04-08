@@ -160,6 +160,73 @@ func TestPRSummary_Marshal(t *testing.T) {
 	}
 }
 
+func TestRunSummary_Unmarshal(t *testing.T) {
+	raw := `[{"number":100,"databaseId":9999,"displayTitle":"CI","headBranch":"main","event":"push","status":"completed","conclusion":"success","workflowName":"CI","url":"https://github.com/o/r/actions/runs/9999","createdAt":"2026-04-07T10:00:00Z"}]`
+	var items []RunSummary
+	if err := json.Unmarshal([]byte(raw), &items); err != nil {
+		t.Fatalf("unmarshal error: %v", err)
+	}
+	if len(items) != 1 {
+		t.Fatalf("expected 1 item, got %d", len(items))
+	}
+	if items[0].Conclusion != "success" {
+		t.Errorf("expected conclusion success, got %s", items[0].Conclusion)
+	}
+	if items[0].DatabaseID != 9999 {
+		t.Errorf("expected databaseId 9999, got %d", items[0].DatabaseID)
+	}
+}
+
+func TestRunDetail_Unmarshal(t *testing.T) {
+	raw := `{
+		"number": 100,
+		"attempt": 1,
+		"displayTitle": "CI",
+		"headBranch": "main",
+		"headSha": "abc123",
+		"event": "push",
+		"status": "completed",
+		"conclusion": "failure",
+		"workflowName": "CI",
+		"url": "https://github.com/o/r/actions/runs/100",
+		"createdAt": "2026-04-07T10:00:00Z",
+		"jobs": [{"name": "build", "status": "completed", "conclusion": "failure", "steps": [{"name": "checkout", "status": "completed", "conclusion": "success", "number": 1}, {"name": "test", "status": "completed", "conclusion": "failure", "number": 2}]}]
+	}`
+	var run RunDetail
+	if err := json.Unmarshal([]byte(raw), &run); err != nil {
+		t.Fatalf("unmarshal error: %v", err)
+	}
+	if run.Conclusion != "failure" {
+		t.Errorf("expected conclusion failure, got %s", run.Conclusion)
+	}
+	if len(run.Jobs) != 1 {
+		t.Fatalf("expected 1 job, got %d", len(run.Jobs))
+	}
+	if len(run.Jobs[0].Steps) != 2 {
+		t.Fatalf("expected 2 steps, got %d", len(run.Jobs[0].Steps))
+	}
+	if run.Jobs[0].Steps[1].Conclusion != "failure" {
+		t.Errorf("expected step 2 failure, got %s", run.Jobs[0].Steps[1].Conclusion)
+	}
+}
+
+func TestPRCheck_Unmarshal(t *testing.T) {
+	raw := `[{"name":"CI","state":"SUCCESS","bucket":"pass","description":"All checks passed","workflow":"CI","link":"https://github.com/o/r/actions/runs/1","event":"pull_request","startedAt":"2026-04-07T10:00:00Z","completedAt":"2026-04-07T10:05:00Z"}]`
+	var items []PRCheck
+	if err := json.Unmarshal([]byte(raw), &items); err != nil {
+		t.Fatalf("unmarshal error: %v", err)
+	}
+	if len(items) != 1 {
+		t.Fatalf("expected 1 check, got %d", len(items))
+	}
+	if items[0].Bucket != "pass" {
+		t.Errorf("expected bucket pass, got %s", items[0].Bucket)
+	}
+	if items[0].State != "SUCCESS" {
+		t.Errorf("expected state SUCCESS, got %s", items[0].State)
+	}
+}
+
 func TestEmptyCollections(t *testing.T) {
 	raw := `{"items": []}`
 	var result PRListResult

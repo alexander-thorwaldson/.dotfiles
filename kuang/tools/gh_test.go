@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"strings"
 	"testing"
 
 	"github.com/modelcontextprotocol/go-sdk/mcp"
@@ -184,6 +185,119 @@ func TestPRListTextContent(t *testing.T) {
 	var parsed []map[string]any
 	if err := json.Unmarshal([]byte(tc.Text), &parsed); err != nil {
 		t.Errorf("text content is not valid JSON: %v", err)
+	}
+}
+
+// -- GitHub Actions tests --
+
+func TestRunList(t *testing.T) {
+	mockGH(t, func(_ context.Context, args ...string) (string, error) {
+		assertContains(t, args, "-R", "o/r")
+		assertContains(t, args, "-b", "main")
+		assertContains(t, args, "-s", "failure")
+		return `[{"number":100,"databaseId":9999,"displayTitle":"CI","headBranch":"main","event":"push","status":"completed","conclusion":"failure","workflowName":"CI","url":"u","createdAt":"2026-04-07"}]`, nil
+	})
+
+	result, out, err := RunList(context.Background(), nil, RunListParams{
+		Repo:   "o/r",
+		Branch: "main",
+		Status: "failure",
+	})
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+	if result.IsError {
+		t.Fatal("expected success result")
+	}
+	if len(out.Items) != 1 {
+		t.Fatalf("expected 1 run, got %d", len(out.Items))
+	}
+	if out.Items[0].Conclusion != "failure" {
+		t.Errorf("expected conclusion failure, got %s", out.Items[0].Conclusion)
+	}
+}
+
+func TestRunList_WithWorkflowAndLimit(t *testing.T) {
+	mockGH(t, func(_ context.Context, args ...string) (string, error) {
+		assertContains(t, args, "-w", "CI")
+		assertContains(t, args, "-L", "5")
+		return `[]`, nil
+	})
+
+	_, out, err := RunList(context.Background(), nil, RunListParams{
+		Repo:     "o/r",
+		Workflow: "CI",
+		Limit:    5,
+	})
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+	if len(out.Items) != 0 {
+		t.Errorf("expected empty list, got %d items", len(out.Items))
+	}
+}
+
+func TestRunView(t *testing.T) {
+	mockGH(t, func(_ context.Context, args ...string) (string, error) {
+		assertContains(t, args, "9999")
+		return `{"number":100,"attempt":1,"displayTitle":"CI","headBranch":"main","headSha":"abc","event":"push","status":"completed","conclusion":"success","workflowName":"CI","url":"u","createdAt":"2026-04-07","jobs":[{"name":"build","status":"completed","conclusion":"success","steps":[]}]}`, nil
+	})
+
+	result, out, err := RunView(context.Background(), nil, RunViewParams{Repo: "o/r", RunID: 9999})
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+	if result.IsError {
+		t.Fatal("expected success result")
+	}
+	if len(out.Jobs) != 1 {
+		t.Fatalf("expected 1 job, got %d", len(out.Jobs))
+	}
+	if out.Jobs[0].Name != "build" {
+		t.Errorf("expected job name build, got %s", out.Jobs[0].Name)
+	}
+}
+
+func TestRunLog(t *testing.T) {
+	mockGH(t, func(_ context.Context, args ...string) (string, error) {
+		assertContains(t, args, "--log-failed")
+		return "build\tStep 2: FAIL npm test\nError: tests failed", nil
+	})
+
+	result, _, err := RunLog(context.Background(), nil, RunLogParams{Repo: "o/r", RunID: 9999})
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+	if result.IsError {
+		t.Fatal("expected success result")
+	}
+	tc, ok := result.Content[0].(*mcp.TextContent)
+	if !ok {
+		t.Fatal("expected TextContent")
+	}
+	if !strings.Contains(tc.Text, "FAIL") {
+		t.Errorf("expected log to contain FAIL, got %q", tc.Text)
+	}
+}
+
+func TestPRChecks(t *testing.T) {
+	mockGH(t, func(_ context.Context, args ...string) (string, error) {
+		assertContains(t, args, "42")
+		return `[{"name":"CI","state":"SUCCESS","bucket":"pass","description":"ok","workflow":"CI","link":"u","event":"pull_request","startedAt":"t1","completedAt":"t2"}]`, nil
+	})
+
+	result, out, err := PRChecks(context.Background(), nil, PRChecksParams{Repo: "o/r", Number: 42})
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+	if result.IsError {
+		t.Fatal("expected success result")
+	}
+	if len(out.Items) != 1 {
+		t.Fatalf("expected 1 check, got %d", len(out.Items))
+	}
+	if out.Items[0].Bucket != "pass" {
+		t.Errorf("expected bucket pass, got %s", out.Items[0].Bucket)
 	}
 }
 

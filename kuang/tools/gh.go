@@ -131,3 +131,85 @@ func RepoView(ctx context.Context, _ *mcp.CallToolRequest, p RepoViewParams) (*m
 	}
 	return Result(raw, out)
 }
+
+// -- GitHub Actions --
+
+// RunListParams are the parameters for listing workflow runs.
+type RunListParams struct {
+	Repo     string `json:"repo" jsonschema:"owner/repo to list runs for"`
+	Branch   string `json:"branch,omitempty" jsonschema:"Filter by branch name"`
+	Status   string `json:"status,omitempty" jsonschema:"Filter by status: queued, completed, in_progress, failure, success, etc."`
+	Workflow string `json:"workflow,omitempty" jsonschema:"Filter by workflow name"`
+	Limit    int    `json:"limit,omitempty" jsonschema:"Max number of runs to return (default: 20)"`
+}
+
+// RunViewParams are the parameters for viewing a workflow run.
+type RunViewParams struct {
+	Repo  string `json:"repo" jsonschema:"owner/repo"`
+	RunID int    `json:"run_id" jsonschema:"Workflow run ID"`
+}
+
+// RunLogParams are the parameters for viewing failed logs from a workflow run.
+type RunLogParams struct {
+	Repo  string `json:"repo" jsonschema:"owner/repo"`
+	RunID int    `json:"run_id" jsonschema:"Workflow run ID"`
+}
+
+// PRChecksParams are the parameters for viewing checks on a pull request.
+type PRChecksParams struct {
+	Repo   string `json:"repo" jsonschema:"owner/repo"`
+	Number int    `json:"number" jsonschema:"PR number"`
+}
+
+// RunList lists recent workflow runs for a repository.
+func RunList(ctx context.Context, _ *mcp.CallToolRequest, p RunListParams) (*mcp.CallToolResult, models.RunListResult, error) {
+	args := []string{"run", "list", "-R", p.Repo, "--json", "number,databaseId,displayTitle,headBranch,event,status,conclusion,workflowName,url,createdAt"}
+	if p.Branch != "" {
+		args = append(args, "-b", p.Branch)
+	}
+	if p.Status != "" {
+		args = append(args, "-s", p.Status)
+	}
+	if p.Workflow != "" {
+		args = append(args, "-w", p.Workflow)
+	}
+	if p.Limit > 0 {
+		args = append(args, "-L", fmt.Sprintf("%d", p.Limit))
+	}
+	var items []models.RunSummary
+	raw, err := ghJSON(ctx, &items, args...)
+	if err != nil {
+		return ErrResult[models.RunListResult](err)
+	}
+	return Result(raw, models.RunListResult{Items: items})
+}
+
+// RunView retrieves full details for a specific workflow run including jobs and steps.
+func RunView(ctx context.Context, _ *mcp.CallToolRequest, p RunViewParams) (*mcp.CallToolResult, models.RunDetail, error) {
+	var out models.RunDetail
+	raw, err := ghJSON(ctx, &out, "run", "view", "-R", p.Repo, fmt.Sprintf("%d", p.RunID), "--json", "number,attempt,displayTitle,headBranch,headSha,event,status,conclusion,workflowName,url,createdAt,jobs")
+	if err != nil {
+		return ErrResult[models.RunDetail](err)
+	}
+	return Result(raw, out)
+}
+
+// RunLog retrieves failed step logs from a workflow run.
+func RunLog(ctx context.Context, _ *mcp.CallToolRequest, p RunLogParams) (*mcp.CallToolResult, models.RunDetail, error) {
+	raw, err := ghExec(ctx, "run", "view", "-R", p.Repo, fmt.Sprintf("%d", p.RunID), "--log-failed")
+	if err != nil {
+		return ErrResult[models.RunDetail](err)
+	}
+	// Log output is plain text, not JSON — return as text with zero-value struct.
+	return Result[models.RunDetail](raw, models.RunDetail{})
+}
+
+// PRChecks retrieves CI check status for a pull request.
+func PRChecks(ctx context.Context, _ *mcp.CallToolRequest, p PRChecksParams) (*mcp.CallToolResult, models.PRChecksResult, error) {
+	var items []models.PRCheck
+	raw, err := ghJSON(ctx, &items, "pr", "checks", "-R", p.Repo, fmt.Sprintf("%d", p.Number), "--json", "name,state,bucket,description,workflow,link,event,startedAt,completedAt")
+	if err != nil {
+		return ErrResult[models.PRChecksResult](err)
+	}
+	return Result(raw, models.PRChecksResult{Items: items})
+}

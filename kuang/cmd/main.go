@@ -41,6 +41,12 @@ func run() int {
 	mcp.AddTool(server, &mcp.Tool{Name: "gh_issue_view", Description: "View a specific issue"}, handlers.FilteredHandler(ice, logger, "gh_issue_view", tools.IssueView))
 	mcp.AddTool(server, &mcp.Tool{Name: "gh_repo_view", Description: "View repository details"}, handlers.FilteredHandler(ice, logger, "gh_repo_view", tools.RepoView))
 
+	// GitHub Actions tools
+	mcp.AddTool(server, &mcp.Tool{Name: "gh_run_list", Description: "List recent workflow runs for a GitHub repo"}, handlers.FilteredHandler(ice, logger, "gh_run_list", tools.RunList))
+	mcp.AddTool(server, &mcp.Tool{Name: "gh_run_view", Description: "View a workflow run with jobs and steps"}, handlers.FilteredHandler(ice, logger, "gh_run_view", tools.RunView))
+	mcp.AddTool(server, &mcp.Tool{Name: "gh_run_log", Description: "View failed step logs from a workflow run"}, handlers.FilteredHandler(ice, logger, "gh_run_log", tools.RunLog))
+	mcp.AddTool(server, &mcp.Tool{Name: "gh_pr_checks", Description: "View CI check status for a pull request"}, handlers.FilteredHandler(ice, logger, "gh_pr_checks", tools.PRChecks))
+
 	// Jira tools
 	mcp.AddTool(server, &mcp.Tool{Name: "jira_issue_list", Description: "List Jira issues by project, JQL query, or assignee"}, handlers.FilteredHandler(ice, logger, "jira_issue_list", tools.JiraIssueList))
 	mcp.AddTool(server, &mcp.Tool{Name: "jira_issue_view", Description: "View a Jira issue with details and comments"}, handlers.FilteredHandler(ice, logger, "jira_issue_view", tools.JiraIssueView))
