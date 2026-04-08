@@ -8,7 +8,13 @@ services:
       - "6167:6167"
     volumes:
       - tuwunel-data:/data
-      - ./tuwunel.toml:/etc/tuwunel/tuwunel.toml:ro
+      - ./tuwunel/tuwunel.toml:/etc/tuwunel/tuwunel.toml:ro
+    networks:
+      - infra
+
+networks:
+  infra:
+    name: dotfiles-infra
 
 volumes:
   tuwunel-data:

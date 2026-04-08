@@ -94,7 +94,7 @@ launchctl bootstrap gui/$(id -u) "$PLIST_DST"
 echo "#> ice daemon registered"
 
 # ──────────────────────────────────────────────
-# Tuwunel — local Matrix homeserver (via Colima)
+# Docker infrastructure (via Colima)
 # ──────────────────────────────────────────────
 echo "#> Starting colima..."
 brew services start colima 2>/dev/null || true
@@ -102,9 +102,22 @@ if ! colima status &>/dev/null; then
     colima start
 fi
 
-echo "#> Starting tuwunel..."
-docker compose -f "$DOTFILES_DIR/tuwunel/docker-compose.yml" up -d
+echo "#> Starting docker services..."
+docker compose -f "$DOTFILES_DIR/docker-compose.yml" up -d
 echo "#> tuwunel running at http://localhost:6167"
+
+# ──────────────────────────────────────────────
+# Kuang — MCP tool gateway daemon
+# ──────────────────────────────────────────────
+echo "#> Building kuang..."
+(cd "$DOTFILES_DIR/kuang" && go build -o kuang ./cmd)
+
+KUANG_BIN="$DOTFILES_DIR/kuang/kuang"
+PLIST_DST=~/Library/LaunchAgents/com.dotfiles.kuang.plist
+sed -e "s|__KUANG_BIN__|${KUANG_BIN}|g" -e "s|__PATH__|${PATH}|g" "$DOTFILES_DIR/kuang/com.dotfiles.kuang.plist.in" > "$PLIST_DST"
+launchctl bootout gui/$(id -u) "$PLIST_DST" 2>/dev/null || true
+launchctl bootstrap gui/$(id -u) "$PLIST_DST"
+echo "#> kuang daemon registered at http://localhost:8080"
 
 # ──────────────────────────────────────────────
 # Neovim

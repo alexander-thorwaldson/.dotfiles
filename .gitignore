@@ -4,6 +4,9 @@ fish_variables
 fish/functions
 fish/completions
 
+### KUANG
+kuang/kuang
+
 ### CLAUDE
 claude/.claude.json
 claude/memory/
