@@ -121,19 +121,20 @@ func TestFilteredHandler_BlocksOutputInjection(t *testing.T) {
 	}
 }
 
-func TestFilteredHandler_ICEDown_FailOpen(t *testing.T) {
+func TestFilteredHandler_ICEDown_FailClosed(t *testing.T) {
 	ice := NewICEClient("http://127.0.0.1:1") // unreachable
 	filtered := FilteredHandler(ice, discardLogger(), "test_tool", safeHandler)
 
-	result, out, err := filtered(context.Background(), nil, testInput{Query: "hello"})
+	req := makeRequest(t, map[string]string{"query": "hello"})
+	result, out, err := filtered(context.Background(), req, testInput{Query: "hello"})
 	if err != nil {
 		t.Fatalf("unexpected error: %v", err)
 	}
-	if result.IsError {
-		t.Fatal("expected success result when ice is down (fail-open)")
+	if !result.IsError {
+		t.Fatal("expected error result when ice is down (fail-closed)")
 	}
-	if out.Answer != "hello" {
-		t.Errorf("expected answer %q, got %q", "hello", out.Answer)
+	if out.Answer != "" {
+		t.Errorf("expected zero output, got %+v", out)
 	}
 }
 

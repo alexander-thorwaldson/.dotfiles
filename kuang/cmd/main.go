@@ -35,6 +35,10 @@ func main() {
 	mcp.AddTool(server, &mcp.Tool{Name: "gh_issue_view", Description: "View a specific issue"}, handlers.FilteredHandler(ice, logger, "gh_issue_view", tools.IssueView))
 	mcp.AddTool(server, &mcp.Tool{Name: "gh_repo_view", Description: "View repository details"}, handlers.FilteredHandler(ice, logger, "gh_repo_view", tools.RepoView))
 
+	// Jira tools
+	mcp.AddTool(server, &mcp.Tool{Name: "jira_issue_list", Description: "List Jira issues by project, JQL query, or assignee"}, handlers.FilteredHandler(ice, logger, "jira_issue_list", tools.JiraIssueList))
+	mcp.AddTool(server, &mcp.Tool{Name: "jira_issue_view", Description: "View a Jira issue with details and comments"}, handlers.FilteredHandler(ice, logger, "jira_issue_view", tools.JiraIssueView))
+
 	addr := os.Getenv("KUANG_ADDR")
 	if addr == "" {
 		addr = ":8080"
