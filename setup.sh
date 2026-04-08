@@ -29,7 +29,10 @@ brew install \
     eza \
     node \
     python@3.13 \
-    jq
+    jq \
+    colima \
+    docker \
+    docker-compose
 
 # ──────────────────────────────────────────────
 # Symlink dotfiles
@@ -89,6 +92,19 @@ sed "s|__PYTHON3__|${PYTHON3_PATH}|g" "$DOTFILES_DIR/ice/com.dotfiles.ice.plist.
 launchctl bootout gui/$(id -u) "$PLIST_DST" 2>/dev/null || true
 launchctl bootstrap gui/$(id -u) "$PLIST_DST"
 echo "#> ice daemon registered"
+
+# ──────────────────────────────────────────────
+# Tuwunel — local Matrix homeserver (via Colima)
+# ──────────────────────────────────────────────
+echo "#> Starting colima..."
+brew services start colima 2>/dev/null || true
+if ! colima status &>/dev/null; then
+    colima start
+fi
+
+echo "#> Starting tuwunel..."
+docker compose -f "$DOTFILES_DIR/tuwunel/docker-compose.yml" up -d
+echo "#> tuwunel running at http://localhost:6167"
 
 # ──────────────────────────────────────────────
 # Neovim

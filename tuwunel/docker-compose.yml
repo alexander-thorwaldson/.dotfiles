@@ -1,0 +1,14 @@
+services:
+  tuwunel:
+    image: jevolk/tuwunel:latest
+    container_name: tuwunel
+    restart: unless-stopped
+    command: ["-c", "/etc/tuwunel/tuwunel.toml"]
+    ports:
+      - "6167:6167"
+    volumes:
+      - tuwunel-data:/data
+      - ./tuwunel.toml:/etc/tuwunel/tuwunel.toml:ro
+
+volumes:
+  tuwunel-data:
