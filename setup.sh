@@ -27,7 +27,9 @@ brew install \
     curl \
     ripgrep \
     eza \
-    node
+    node \
+    python@3.13 \
+    jq
 
 # ──────────────────────────────────────────────
 # Symlink dotfiles
@@ -67,6 +69,26 @@ fish -c '
     fisher update
 '
 echo "#> Fisher plugins installed"
+
+# ──────────────────────────────────────────────
+# ICE — prompt injection classifier daemon
+# ──────────────────────────────────────────────
+echo "#> Installing ice..."
+DOTFILES_DIR="$(cd "$(dirname "$0")" && pwd)"
+pip3 install --break-system-packages -q "$DOTFILES_DIR/ice"
+
+# Download + cache the ONNX model on first setup
+echo "#> Warming ice model cache (first run only)..."
+python3 -c "from ice.classifier import Classifier; Classifier()" 2>/dev/null || true
+
+# Install launchd plist — template in the real python3 path
+mkdir -p ~/Library/LaunchAgents
+PYTHON3_PATH="$(command -v python3)"
+PLIST_DST=~/Library/LaunchAgents/com.dotfiles.ice.plist
+sed "s|__PYTHON3__|${PYTHON3_PATH}|g" "$DOTFILES_DIR/ice/com.dotfiles.ice.plist.in" > "$PLIST_DST"
+launchctl bootout gui/$(id -u) "$PLIST_DST" 2>/dev/null || true
+launchctl bootstrap gui/$(id -u) "$PLIST_DST"
+echo "#> ice daemon registered"
 
 # ──────────────────────────────────────────────
 # Neovim
