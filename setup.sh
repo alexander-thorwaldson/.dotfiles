@@ -151,8 +151,8 @@ echo "#> Building kuang..."
 KUANG_CERTS="$DOTFILES_DIR/kuang/certs"
 mkdir -p "$KUANG_CERTS"
 
-# Copy CA root cert for client verification
-cp "$STEP_HOME/certs/root_ca.crt" "$KUANG_CERTS/root_ca.crt"
+# Bundle root + intermediate CA certs for client verification
+cat "$STEP_HOME/certs/root_ca.crt" "$STEP_HOME/certs/intermediate_ca.crt" > "$KUANG_CERTS/root_ca.crt"
 
 # Issue kuang server cert if missing
 if [ ! -f "$KUANG_CERTS/kuang.crt" ]; then
@@ -163,7 +163,7 @@ fi
 
 KUANG_BIN="$DOTFILES_DIR/kuang/kuang"
 PLIST_DST=~/Library/LaunchAgents/com.dotfiles.kuang.plist
-sed -e "s|__KUANG_BIN__|${KUANG_BIN}|g" -e "s|__PATH__|${PATH}|g" "$DOTFILES_DIR/kuang/com.dotfiles.kuang.plist.in" > "$PLIST_DST"
+sed -e "s|__KUANG_BIN__|${KUANG_BIN}|g" -e "s|__CERTS_DIR__|${KUANG_CERTS}|g" -e "s|__PATH__|${PATH}|g" "$DOTFILES_DIR/kuang/com.dotfiles.kuang.plist.in" > "$PLIST_DST"
 launchctl bootout gui/$(id -u) "$PLIST_DST" 2>/dev/null || true
 launchctl bootstrap gui/$(id -u) "$PLIST_DST"
 echo "#> kuang daemon registered at https://localhost:7117"

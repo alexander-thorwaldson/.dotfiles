@@ -17,6 +17,8 @@
         <string>:7117</string>
         <key>KUANG_ICE_ENDPOINT</key>
         <string>http://127.0.0.1:9119</string>
+        <key>KUANG_CERTS_DIR</key>
+        <string>__CERTS_DIR__</string>
         <key>PATH</key>
         <string>__PATH__</string>
     </dict>

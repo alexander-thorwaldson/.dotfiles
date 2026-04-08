@@ -9,6 +9,7 @@ import (
 	"log/slog"
 	"net/http"
 	"os"
+	"time"
 
 	"github.com/modelcontextprotocol/go-sdk/mcp"
 	"github.com/zoobz-io/sctx"
@@ -57,10 +58,15 @@ func NewAuth(logger *slog.Logger, privateKey crypto.PrivateKey, cert *x509.Certi
 // resolved from the role via ExpandRole.
 func agentPolicy(cert *x509.Certificate) (*sctx.Context[AgentMeta], error) {
 	// Kuang itself (CN=kuang) gets admin role.
+	// Context expiry matches the certificate's NotAfter.
+	expiry := cert.NotAfter
+
 	if cert.Subject.CommonName == "kuang" {
 		return &sctx.Context[AgentMeta]{
 			Permissions: AllToolPermissions(),
 			Metadata:    AgentMeta{AgentName: "kuang", Role: RoleAdmin},
+			IssuedAt:    time.Now(),
+			ExpiresAt:   expiry,
 		}, nil
 	}
 
@@ -77,6 +83,8 @@ func agentPolicy(cert *x509.Certificate) (*sctx.Context[AgentMeta], error) {
 	return &sctx.Context[AgentMeta]{
 		Permissions: perms,
 		Metadata:    AgentMeta{AgentName: cert.Subject.CommonName, Role: role},
+		IssuedAt:    time.Now(),
+		ExpiresAt:   expiry,
 	}, nil
 }
 
