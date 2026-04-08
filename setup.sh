@@ -166,7 +166,7 @@ PLIST_DST=~/Library/LaunchAgents/com.dotfiles.kuang.plist
 sed -e "s|__KUANG_BIN__|${KUANG_BIN}|g" -e "s|__PATH__|${PATH}|g" "$DOTFILES_DIR/kuang/com.dotfiles.kuang.plist.in" > "$PLIST_DST"
 launchctl bootout gui/$(id -u) "$PLIST_DST" 2>/dev/null || true
 launchctl bootstrap gui/$(id -u) "$PLIST_DST"
-echo "#> kuang daemon registered at https://localhost:8080"
+echo "#> kuang daemon registered at https://localhost:7117"
 
 # Start cert auto-renewal daemon
 STEP_BIN="$(command -v step)"

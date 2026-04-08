@@ -72,7 +72,7 @@ func run() int {
 	// Address.
 	addr := os.Getenv("KUANG_ADDR")
 	if addr == "" {
-		addr = ":8080"
+		addr = ":7117"
 	}
 
 	// SSE handler wrapped with token injection middleware.

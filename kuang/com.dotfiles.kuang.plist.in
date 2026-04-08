@@ -14,7 +14,7 @@
     <key>EnvironmentVariables</key>
     <dict>
         <key>KUANG_ADDR</key>
-        <string>:8080</string>
+        <string>:7117</string>
         <key>KUANG_ICE_ENDPOINT</key>
         <string>http://127.0.0.1:9119</string>
         <key>PATH</key>
