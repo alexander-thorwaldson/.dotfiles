@@ -188,6 +188,72 @@ func TestPRListTextContent(t *testing.T) {
 	}
 }
 
+// -- PR Create tests --
+
+func TestPRCreate(t *testing.T) {
+	mockGH(t, func(_ context.Context, args ...string) (string, error) {
+		assertContains(t, args, "-R", "o/r", "--title", "New feature", "--head", "feat-branch")
+		return "https://github.com/o/r/pull/99\n", nil
+	})
+
+	result, out, err := PRCreate(context.Background(), nil, PRCreateParams{
+		Repo:  "o/r",
+		Title: "New feature",
+		Head:  "feat-branch",
+	})
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+	if result.IsError {
+		t.Fatal("expected success result")
+	}
+	if out.URL != "https://github.com/o/r/pull/99" {
+		t.Errorf("expected URL %q, got %q", "https://github.com/o/r/pull/99", out.URL)
+	}
+}
+
+func TestPRCreate_AllOptions(t *testing.T) {
+	mockGH(t, func(_ context.Context, args ...string) (string, error) {
+		assertContains(t, args, "--base", "main", "--draft", "--label", "bug", "--reviewer", "alice")
+		return "https://github.com/o/r/pull/100\n", nil
+	})
+
+	_, out, err := PRCreate(context.Background(), nil, PRCreateParams{
+		Repo:     "o/r",
+		Title:    "Fix bug",
+		Body:     "Fixes #42",
+		Head:     "fix-branch",
+		Base:     "main",
+		Draft:    true,
+		Labels:   []string{"bug"},
+		Reviewer: []string{"alice"},
+	})
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+	if out.URL != "https://github.com/o/r/pull/100" {
+		t.Errorf("expected URL, got %q", out.URL)
+	}
+}
+
+func TestPRCreate_Error(t *testing.T) {
+	mockGH(t, func(_ context.Context, _ ...string) (string, error) {
+		return "", fmt.Errorf("gh: branch not pushed")
+	})
+
+	result, _, err := PRCreate(context.Background(), nil, PRCreateParams{
+		Repo:  "o/r",
+		Title: "Test",
+		Head:  "branch",
+	})
+	if err != nil {
+		t.Fatalf("unexpected Go error: %v", err)
+	}
+	if !result.IsError {
+		t.Error("expected IsError to be true")
+	}
+}
+
 // -- GitHub Actions tests --
 
 func TestRunList(t *testing.T) {

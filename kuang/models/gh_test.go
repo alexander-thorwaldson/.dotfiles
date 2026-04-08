@@ -210,6 +210,17 @@ func TestRunDetail_Unmarshal(t *testing.T) {
 	}
 }
 
+func TestPRCreateResult_Unmarshal(t *testing.T) {
+	raw := `{"url":"https://github.com/o/r/pull/99"}`
+	var result PRCreateResult
+	if err := json.Unmarshal([]byte(raw), &result); err != nil {
+		t.Fatalf("unmarshal error: %v", err)
+	}
+	if result.URL != "https://github.com/o/r/pull/99" {
+		t.Errorf("expected URL, got %q", result.URL)
+	}
+}
+
 func TestPRCheck_Unmarshal(t *testing.T) {
 	raw := `[{"name":"CI","state":"SUCCESS","bucket":"pass","description":"All checks passed","workflow":"CI","link":"https://github.com/o/r/actions/runs/1","event":"pull_request","startedAt":"2026-04-07T10:00:00Z","completedAt":"2026-04-07T10:05:00Z"}]`
 	var items []PRCheck

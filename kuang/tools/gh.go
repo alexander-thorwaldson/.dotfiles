@@ -132,6 +132,48 @@ func RepoView(ctx context.Context, _ *mcp.CallToolRequest, p RepoViewParams) (*m
 	return Result(raw, out)
 }
 
+// -- PR Write Operations --
+
+// PRCreateParams are the parameters for creating a pull request.
+type PRCreateParams struct {
+	Repo     string   `json:"repo" jsonschema:"owner/repo to create the PR in"`
+	Title    string   `json:"title" jsonschema:"Title for the pull request"`
+	Body     string   `json:"body,omitempty" jsonschema:"Body/description for the pull request"`
+	Base     string   `json:"base,omitempty" jsonschema:"Base branch to merge into (default: repo default branch)"`
+	Head     string   `json:"head" jsonschema:"Branch that contains commits for the PR"`
+	Labels   []string `json:"labels,omitempty" jsonschema:"Labels to add by name"`
+	Reviewer []string `json:"reviewers,omitempty" jsonschema:"Request reviews from people or teams by handle"`
+	Draft    bool     `json:"draft,omitempty" jsonschema:"Mark pull request as a draft"`
+}
+
+// PRCreate creates a pull request on GitHub.
+func PRCreate(ctx context.Context, _ *mcp.CallToolRequest, p PRCreateParams) (*mcp.CallToolResult, models.PRCreateResult, error) {
+	args := []string{"pr", "create", "-R", p.Repo, "--title", p.Title, "--head", p.Head}
+	if p.Body != "" {
+		args = append(args, "--body", p.Body)
+	} else {
+		args = append(args, "--body", "")
+	}
+	if p.Base != "" {
+		args = append(args, "--base", p.Base)
+	}
+	if p.Draft {
+		args = append(args, "--draft")
+	}
+	for _, l := range p.Labels {
+		args = append(args, "--label", l)
+	}
+	for _, r := range p.Reviewer {
+		args = append(args, "--reviewer", r)
+	}
+	raw, err := ghExec(ctx, args...)
+	if err != nil {
+		return ErrResult[models.PRCreateResult](err)
+	}
+	url := strings.TrimSpace(raw)
+	return Result(url, models.PRCreateResult{URL: url})
+}
+
 // -- GitHub Actions --
 
 // RunListParams are the parameters for listing workflow runs.

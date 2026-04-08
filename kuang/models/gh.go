@@ -163,6 +163,13 @@ type RunDetail struct {
 	Attempt      int      `json:"attempt"`
 }
 
+// -- PR Create --
+
+// PRCreateResult is the result of creating a pull request.
+type PRCreateResult struct {
+	URL string `json:"url"`
+}
+
 // -- PR Checks --
 
 // PRCheck represents a single check on a pull request.

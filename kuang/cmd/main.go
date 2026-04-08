@@ -41,6 +41,9 @@ func run() int {
 	mcp.AddTool(server, &mcp.Tool{Name: "gh_issue_view", Description: "View a specific issue"}, handlers.FilteredHandler(ice, logger, "gh_issue_view", tools.IssueView))
 	mcp.AddTool(server, &mcp.Tool{Name: "gh_repo_view", Description: "View repository details"}, handlers.FilteredHandler(ice, logger, "gh_repo_view", tools.RepoView))
 
+	// GitHub PR write tools
+	mcp.AddTool(server, &mcp.Tool{Name: "gh_pr_create", Description: "Create a pull request on GitHub"}, handlers.FilteredHandler(ice, logger, "gh_pr_create", tools.PRCreate))
+
 	// GitHub Actions tools
 	mcp.AddTool(server, &mcp.Tool{Name: "gh_run_list", Description: "List recent workflow runs for a GitHub repo"}, handlers.FilteredHandler(ice, logger, "gh_run_list", tools.RunList))
 	mcp.AddTool(server, &mcp.Tool{Name: "gh_run_view", Description: "View a workflow run with jobs and steps"}, handlers.FilteredHandler(ice, logger, "gh_run_view", tools.RunView))
