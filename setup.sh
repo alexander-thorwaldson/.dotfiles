@@ -44,6 +44,7 @@ brew install \
     lazydocker \
     colima \
     go-jira \
+    step \
     docker \
     docker-compose
 
@@ -120,17 +121,61 @@ docker compose -f "$DOTFILES_DIR/docker-compose.yml" up -d
 echo "#> tuwunel running at http://localhost:6167"
 
 # ──────────────────────────────────────────────
+# Step CA — local certificate authority
+# ──────────────────────────────────────────────
+STEP_HOME="$HOME/.step"
+if [ ! -f "$STEP_HOME/config/ca.json" ]; then
+    echo "#> Initializing step-ca..."
+    CA_PASSWORD=$(openssl rand -base64 32)
+    step ca init --name "dotfiles-ca" --provisioner "admin" --dns "localhost" --address ":9443" --password-file <(echo "$CA_PASSWORD")
+    security add-generic-password -a "step-ca" -s "dotfiles-ca" -w "$CA_PASSWORD" -U
+    # Remove any cleartext password files left by step ca init
+    rm -f "$STEP_HOME/secrets/password"
+fi
+
+PLIST_DST=~/Library/LaunchAgents/com.dotfiles.step-ca.plist
+sed -e "s|__DOTFILES_DIR__|${DOTFILES_DIR}|g" -e "s|__STEP_HOME__|${STEP_HOME}|g" -e "s|__PATH__|${PATH}|g" "$DOTFILES_DIR/step-ca/com.dotfiles.step-ca.plist.in" > "$PLIST_DST"
+launchctl bootout gui/$(id -u) "$PLIST_DST" 2>/dev/null || true
+launchctl bootstrap gui/$(id -u) "$PLIST_DST"
+echo "#> step-ca daemon registered at https://localhost:9443"
+
+# Wait for step-ca to be ready
+sleep 2
+
+# ──────────────────────────────────────────────
 # Kuang — MCP tool gateway daemon
 # ──────────────────────────────────────────────
 echo "#> Building kuang..."
 (cd "$DOTFILES_DIR/kuang" && go build -o kuang ./cmd)
+
+KUANG_CERTS="$DOTFILES_DIR/kuang/certs"
+mkdir -p "$KUANG_CERTS"
+
+# Copy CA root cert for client verification
+cp "$STEP_HOME/certs/root_ca.crt" "$KUANG_CERTS/root_ca.crt"
+
+# Issue kuang server cert if missing
+if [ ! -f "$KUANG_CERTS/kuang.crt" ]; then
+    echo "#> Issuing kuang server certificate..."
+    "$DOTFILES_DIR/step-ca/issue-cert.sh" kuang "$KUANG_CERTS/kuang.crt" "$KUANG_CERTS/kuang.key" \
+        --san localhost --san 127.0.0.1
+fi
 
 KUANG_BIN="$DOTFILES_DIR/kuang/kuang"
 PLIST_DST=~/Library/LaunchAgents/com.dotfiles.kuang.plist
 sed -e "s|__KUANG_BIN__|${KUANG_BIN}|g" -e "s|__PATH__|${PATH}|g" "$DOTFILES_DIR/kuang/com.dotfiles.kuang.plist.in" > "$PLIST_DST"
 launchctl bootout gui/$(id -u) "$PLIST_DST" 2>/dev/null || true
 launchctl bootstrap gui/$(id -u) "$PLIST_DST"
-echo "#> kuang daemon registered at http://localhost:8080"
+echo "#> kuang daemon registered at https://localhost:8080"
+
+# Start cert auto-renewal daemon
+STEP_BIN="$(command -v step)"
+UID_VAL="$(id -u)"
+PLIST_DST=~/Library/LaunchAgents/com.dotfiles.kuang-renew.plist
+sed -e "s|__STEP_BIN__|${STEP_BIN}|g" -e "s|__STEP_HOME__|${STEP_HOME}|g" -e "s|__CERTS_DIR__|${KUANG_CERTS}|g" -e "s|__UID__|${UID_VAL}|g" "$KUANG_CERTS/com.dotfiles.kuang-renew.plist.in" > "$PLIST_DST"
+launchctl bootout gui/$(id -u) "$PLIST_DST" 2>/dev/null || true
+launchctl bootstrap gui/$(id -u) "$PLIST_DST"
+echo "#> kuang cert auto-renewal daemon registered"
 
 # ──────────────────────────────────────────────
 # Neovim

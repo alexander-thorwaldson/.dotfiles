@@ -6,6 +6,9 @@ fish/completions
 
 ### KUANG
 kuang/kuang
+*.key
+*.crt
+!kuang/certs/root_ca.crt
 
 ### CLAUDE
 claude/.claude.json

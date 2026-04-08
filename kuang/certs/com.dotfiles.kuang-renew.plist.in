@@ -1,0 +1,39 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN"
+  "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+    <key>Label</key>
+    <string>com.dotfiles.kuang-renew</string>
+
+    <key>ProgramArguments</key>
+    <array>
+        <string>__STEP_BIN__</string>
+        <string>ca</string>
+        <string>renew</string>
+        <string>__CERTS_DIR__/kuang.crt</string>
+        <string>__CERTS_DIR__/kuang.key</string>
+        <string>--daemon</string>
+        <string>--exec</string>
+        <string>launchctl kickstart -k gui/__UID__/com.dotfiles.kuang</string>
+    </array>
+
+    <key>EnvironmentVariables</key>
+    <dict>
+        <key>STEPPATH</key>
+        <string>__STEP_HOME__</string>
+    </dict>
+
+    <key>RunAtLoad</key>
+    <true/>
+
+    <key>KeepAlive</key>
+    <true/>
+
+    <key>StandardOutPath</key>
+    <string>/tmp/kuang-renew.out.log</string>
+
+    <key>StandardErrorPath</key>
+    <string>/tmp/kuang-renew.err.log</string>
+</dict>
+</plist>
