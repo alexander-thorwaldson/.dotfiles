@@ -24,13 +24,26 @@ brew install \
     tmux \
     starship \
     git \
+    gh \
     curl \
     ripgrep \
+    fd \
+    fzf \
     eza \
+    bat \
+    git-delta \
+    tree \
     node \
+    pnpm \
+    go \
     python@3.13 \
     jq \
+    yq \
+    httpie \
+    lazygit \
+    lazydocker \
     colima \
+    go-jira \
     docker \
     docker-compose
 
