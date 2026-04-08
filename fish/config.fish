@@ -19,4 +19,10 @@ end
 
 alias ll "eza -l --icons --git"
 
+# Jack operator — load token if initialized
+if test -f ~/.jack/operator/token
+    set -gx JACK_MSG_TOKEN (cat ~/.jack/operator/token)
+    set -gx JACK_HOMESERVER "http://localhost:6167"
+end
+
 starship init fish | source

@@ -1,0 +1,21 @@
+agents:
+  case:
+    repos: []
+  molly:
+    repos: []
+  dixie:
+    repos: []
+  armitage:
+    repos: []
+  riviera:
+    repos: []
+  wintermute:
+    repos: []
+
+matrix:
+  homeserver: "http://localhost:6167"
+  registration_token: "jack-local-dev"
+
+git:
+  name: "Alex Thorwaldson"
+  email: "alex@zoobz.io"

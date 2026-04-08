@@ -6,7 +6,7 @@ cd "$(git rev-parse --show-toplevel)" || exit
 echo "#> Started installing dotfiles..."
 
 # Configs to symlink into ~/.config/
-configs=(alacritty fish nvim tmux)
+configs=(alacritty fish nvim tmux jack)
 
 for d in "${configs[@]}"; do
   local_config=~/.config/$d
