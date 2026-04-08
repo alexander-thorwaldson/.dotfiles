@@ -62,7 +62,10 @@ func TestFilteredHandler_PassesCleanCall(t *testing.T) {
 	if out.Answer != "hello" {
 		t.Errorf("expected answer %q, got %q", "hello", out.Answer)
 	}
-	tc := result.Content[0].(*mcp.TextContent)
+	tc, ok := result.Content[0].(*mcp.TextContent)
+	if !ok {
+		t.Fatal("expected TextContent")
+	}
 	if tc.Text != "response: hello" {
 		t.Errorf("expected text %q, got %q", "response: hello", tc.Text)
 	}

@@ -25,7 +25,10 @@ func newVariableICEServer(t *testing.T, fn func() (string, float64)) *httptest.S
 			},
 		}
 		w.Header().Set("Content-Type", "application/json")
-		json.NewEncoder(w).Encode(resp)
+		if err := json.NewEncoder(w).Encode(resp); err != nil {
+			http.Error(w, "encode error", http.StatusInternalServerError)
+			return
+		}
 	}))
 }
 
@@ -59,7 +62,10 @@ func newTestICEServer(t *testing.T, label string, score float64) *httptest.Serve
 			},
 		}
 		w.Header().Set("Content-Type", "application/json")
-		json.NewEncoder(w).Encode(resp)
+		if err := json.NewEncoder(w).Encode(resp); err != nil {
+			http.Error(w, "encode error", http.StatusInternalServerError)
+			return
+		}
 	}))
 }
 
@@ -145,7 +151,7 @@ func TestClassify_Unreachable(t *testing.T) {
 
 func TestClassify_InvalidJSON(t *testing.T) {
 	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, _ *http.Request) {
-		w.Write([]byte("not json"))
+		_, _ = w.Write([]byte("not json"))
 	}))
 	defer srv.Close()
 

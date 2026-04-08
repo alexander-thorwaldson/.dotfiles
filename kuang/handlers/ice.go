@@ -1,7 +1,10 @@
+// Package handlers provides MCP tool handler wrappers including prompt
+// injection filtering via the ice classifier.
 package handlers
 
 import (
 	"bytes"
+	"context"
 	"encoding/json"
 	"fmt"
 	"io"
@@ -10,8 +13,8 @@ import (
 
 // ICEClient talks to the ice prompt injection classifier daemon.
 type ICEClient struct {
-	Endpoint string
 	HTTP     *http.Client
+	Endpoint string
 }
 
 // NewICEClient creates an ICE client pointing at the given base URL.
@@ -24,9 +27,9 @@ func NewICEClient(endpoint string) *ICEClient {
 
 // Classification is the response from the ice /classify endpoint.
 type Classification struct {
+	Scores map[string]float64 `json:"scores"`
 	Label  string             `json:"label"`
 	Score  float64            `json:"score"`
-	Scores map[string]float64 `json:"scores"`
 }
 
 // Classify sends text to ice for prompt injection classification.
@@ -35,11 +38,20 @@ func (c *ICEClient) Classify(text string) (*Classification, error) {
 	if err != nil {
 		return nil, fmt.Errorf("marshalling request: %w", err)
 	}
-	resp, err := c.HTTP.Post(c.Endpoint+"/classify", "application/json", bytes.NewReader(body))
+
+	req, err := http.NewRequestWithContext(context.Background(), http.MethodPost, c.Endpoint+"/classify", bytes.NewReader(body))
+	if err != nil {
+		return nil, fmt.Errorf("creating ice request: %w", err)
+	}
+	req.Header.Set("Content-Type", "application/json")
+
+	resp, err := c.HTTP.Do(req)
 	if err != nil {
 		return nil, fmt.Errorf("ice request failed: %w", err)
 	}
-	defer resp.Body.Close()
+	defer func() {
+		_ = resp.Body.Close()
+	}()
 
 	respBody, err := io.ReadAll(resp.Body)
 	if err != nil {

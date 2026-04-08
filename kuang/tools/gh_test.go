@@ -176,7 +176,10 @@ func TestPRListTextContent(t *testing.T) {
 	if len(result.Content) != 1 {
 		t.Fatalf("expected 1 content, got %d", len(result.Content))
 	}
-	tc := result.Content[0].(*mcp.TextContent)
+	tc, ok := result.Content[0].(*mcp.TextContent)
+	if !ok {
+		t.Fatal("expected TextContent")
+	}
 	// Verify the raw JSON is passed through as text content
 	var parsed []map[string]any
 	if err := json.Unmarshal([]byte(tc.Text), &parsed); err != nil {

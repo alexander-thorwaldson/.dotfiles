@@ -1,3 +1,4 @@
+// Package main is the entry point for the kuang MCP server.
 package main
 
 import (
@@ -6,6 +7,7 @@ import (
 	"net/http"
 	"os"
 	"os/signal"
+	"time"
 
 	"github.com/modelcontextprotocol/go-sdk/mcp"
 	"github.com/zoobzio/dotfiles/kuang/handlers"
@@ -13,6 +15,10 @@ import (
 )
 
 func main() {
+	os.Exit(run())
+}
+
+func run() int {
 	logger := slog.New(slog.NewTextHandler(os.Stderr, nil))
 
 	iceEndpoint := os.Getenv("KUANG_ICE_ENDPOINT")
@@ -51,16 +57,23 @@ func main() {
 	ctx, stop := signal.NotifyContext(context.Background(), os.Interrupt)
 	defer stop()
 
-	srv := &http.Server{Addr: addr, Handler: handler}
+	srv := &http.Server{
+		Addr:              addr,
+		Handler:           handler,
+		ReadHeaderTimeout: 10 * time.Second,
+	}
 
 	go func() {
 		<-ctx.Done()
-		srv.Close()
+		if err := srv.Close(); err != nil {
+			logger.Error("server close error", "err", err)
+		}
 	}()
 
 	logger.Info("kuang listening", "addr", addr)
 	if err := srv.ListenAndServe(); err != http.ErrServerClosed {
 		logger.Error("server error", "err", err)
-		os.Exit(1)
+		return 1
 	}
+	return 0
 }

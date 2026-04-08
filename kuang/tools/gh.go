@@ -1,3 +1,4 @@
+// Package tools implements MCP tool handlers that shell out to CLI tools.
 package tools
 
 import (
@@ -13,28 +14,33 @@ import (
 
 // -- GitHub param types --
 
+// PRListParams are the parameters for listing pull requests.
 type PRListParams struct {
 	Repo  string `json:"repo" jsonschema:"owner/repo to list PRs for"`
 	State string `json:"state,omitempty" jsonschema:"Filter by state: open, closed, merged, all (default: open)"`
 	Limit int    `json:"limit,omitempty" jsonschema:"Max number of PRs to return (default: 30)"`
 }
 
+// PRViewParams are the parameters for viewing a pull request.
 type PRViewParams struct {
 	Repo   string `json:"repo" jsonschema:"owner/repo"`
 	Number int    `json:"number" jsonschema:"PR number"`
 }
 
+// IssueListParams are the parameters for listing issues.
 type IssueListParams struct {
 	Repo  string `json:"repo" jsonschema:"owner/repo to list issues for"`
 	State string `json:"state,omitempty" jsonschema:"Filter by state: open, closed, all (default: open)"`
 	Limit int    `json:"limit,omitempty" jsonschema:"Max number of issues to return (default: 30)"`
 }
 
+// IssueViewParams are the parameters for viewing an issue.
 type IssueViewParams struct {
 	Repo   string `json:"repo" jsonschema:"owner/repo"`
 	Number int    `json:"number" jsonschema:"Issue number"`
 }
 
+// RepoViewParams are the parameters for viewing a repository.
 type RepoViewParams struct {
 	Repo string `json:"repo" jsonschema:"owner/repo to view"`
 }
@@ -42,10 +48,10 @@ type RepoViewParams struct {
 // ghExec runs the GitHub CLI and returns its output.
 // Swappable for testing.
 var ghExec = func(ctx context.Context, args ...string) (string, error) {
-	cmd := exec.CommandContext(ctx, "gh", args...)
+	cmd := exec.CommandContext(ctx, "gh", args...) // #nosec G204 -- intentional subprocess //nolint:gosec
 	out, err := cmd.CombinedOutput()
 	if err != nil {
-		return "", fmt.Errorf("%s: %s", err, strings.TrimSpace(string(out)))
+		return "", fmt.Errorf("%w: %s", err, strings.TrimSpace(string(out)))
 	}
 	return string(out), nil
 }
@@ -62,6 +68,7 @@ func ghJSON[Out any](ctx context.Context, v *Out, args ...string) (string, error
 	return raw, nil
 }
 
+// PRList lists pull requests for a GitHub repository.
 func PRList(ctx context.Context, _ *mcp.CallToolRequest, p PRListParams) (*mcp.CallToolResult, models.PRListResult, error) {
 	args := []string{"pr", "list", "-R", p.Repo, "--json", "number,title,state,author,url"}
 	if p.State != "" {
@@ -78,6 +85,7 @@ func PRList(ctx context.Context, _ *mcp.CallToolRequest, p PRListParams) (*mcp.C
 	return Result(raw, models.PRListResult{Items: items})
 }
 
+// PRView retrieves full details for a specific pull request.
 func PRView(ctx context.Context, _ *mcp.CallToolRequest, p PRViewParams) (*mcp.CallToolResult, models.PRDetail, error) {
 	var out models.PRDetail
 	raw, err := ghJSON(ctx, &out, "pr", "view", "-R", p.Repo, fmt.Sprintf("%d", p.Number), "--json", "number,title,state,body,author,url,reviews,comments")
@@ -87,6 +95,7 @@ func PRView(ctx context.Context, _ *mcp.CallToolRequest, p PRViewParams) (*mcp.C
 	return Result(raw, out)
 }
 
+// IssueList lists issues for a GitHub repository.
 func IssueList(ctx context.Context, _ *mcp.CallToolRequest, p IssueListParams) (*mcp.CallToolResult, models.IssueListResult, error) {
 	args := []string{"issue", "list", "-R", p.Repo, "--json", "number,title,state,author,url"}
 	if p.State != "" {
@@ -103,6 +112,7 @@ func IssueList(ctx context.Context, _ *mcp.CallToolRequest, p IssueListParams) (
 	return Result(raw, models.IssueListResult{Items: items})
 }
 
+// IssueView retrieves full details for a specific issue.
 func IssueView(ctx context.Context, _ *mcp.CallToolRequest, p IssueViewParams) (*mcp.CallToolResult, models.IssueDetail, error) {
 	var out models.IssueDetail
 	raw, err := ghJSON(ctx, &out, "issue", "view", "-R", p.Repo, fmt.Sprintf("%d", p.Number), "--json", "number,title,state,body,author,url,comments")
@@ -112,6 +122,7 @@ func IssueView(ctx context.Context, _ *mcp.CallToolRequest, p IssueViewParams) (
 	return Result(raw, out)
 }
 
+// RepoView retrieves full details for a repository.
 func RepoView(ctx context.Context, _ *mcp.CallToolRequest, p RepoViewParams) (*mcp.CallToolResult, models.RepoDetail, error) {
 	var out models.RepoDetail
 	raw, err := ghJSON(ctx, &out, "repo", "view", p.Repo, "--json", "name,description,url,defaultBranchRef,languages,issues,pullRequests")
