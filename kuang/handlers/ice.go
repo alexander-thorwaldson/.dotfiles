@@ -69,11 +69,14 @@ func (c *ICEClient) Classify(text string) (*Classification, error) {
 	return &result, nil
 }
 
+// labelInjection is the classification label for prompt injection.
+const labelInjection = "INJECTION"
+
 // IsInjection returns true if the text is classified as a prompt injection.
 func (c *ICEClient) IsInjection(text string) (bool, error) {
 	result, err := c.Classify(text)
 	if err != nil {
 		return false, err
 	}
-	return result.Label == "INJECTION", nil
+	return result.Label == labelInjection, nil
 }

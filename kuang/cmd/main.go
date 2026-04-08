@@ -54,6 +54,16 @@ func run() int {
 	mcp.AddTool(server, &mcp.Tool{Name: "jira_issue_list", Description: "List Jira issues by project, JQL query, or assignee"}, handlers.FilteredHandler(ice, logger, "jira_issue_list", tools.JiraIssueList))
 	mcp.AddTool(server, &mcp.Tool{Name: "jira_issue_view", Description: "View a Jira issue with details and comments"}, handlers.FilteredHandler(ice, logger, "jira_issue_view", tools.JiraIssueView))
 
+	// Dev server tools
+	reg := handlers.NewRegistry()
+	mcp.AddTool(server, &mcp.Tool{Name: "dev_start", Description: "Start a dev server for a repo (idempotent, blocks until ready)"}, handlers.FilteredHandler(ice, logger, "dev_start", tools.NewDevStart(reg)))
+	mcp.AddTool(server, &mcp.Tool{Name: "dev_stop", Description: "Stop a running dev server"}, handlers.FilteredHandler(ice, logger, "dev_stop", tools.NewDevStop(reg)))
+	mcp.AddTool(server, &mcp.Tool{Name: "dev_status", Description: "List running dev servers and their status"}, handlers.FilteredHandler(ice, logger, "dev_status", tools.NewDevStatus(reg)))
+	mcp.AddTool(server, &mcp.Tool{Name: "dev_log", Description: "Read recent log output from a dev server"}, handlers.FilteredHandler(ice, logger, "dev_log", tools.NewDevLog(reg)))
+
+	// Package manager tools
+	mcp.AddTool(server, &mcp.Tool{Name: "pnpm_run", Description: "Run a pnpm script by name (e.g. test, lint, build)"}, handlers.FilteredHandler(ice, logger, "pnpm_run", tools.PnpmRun))
+
 	addr := os.Getenv("KUANG_ADDR")
 	if addr == "" {
 		addr = ":8080"
