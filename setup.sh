@@ -46,7 +46,8 @@ brew install \
     go-jira \
     step \
     docker \
-    docker-compose
+    docker-compose |
+    spotify_player
 
 # ──────────────────────────────────────────────
 # Symlink dotfiles
