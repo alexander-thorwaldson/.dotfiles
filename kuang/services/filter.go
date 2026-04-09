@@ -10,10 +10,13 @@ func scanInput(ice *ICEClient, input any) error {
 	if input == nil {
 		return nil
 	}
-	raw, _ := json.Marshal(input)
-	injected, err := ice.IsInjection(string(raw))
+	raw, err := json.Marshal(input)
 	if err != nil {
-		return fmt.Errorf("ice unavailable: %w", err)
+		return fmt.Errorf("marshalling input for ice scan: %w", err)
+	}
+	injected, iceErr := ice.IsInjection(string(raw))
+	if iceErr != nil {
+		return fmt.Errorf("ice unavailable: %w", iceErr)
 	}
 	if injected {
 		return fmt.Errorf("request blocked: prompt injection detected in input")
@@ -26,15 +29,8 @@ func scanInput(ice *ICEClient, input any) error {
 // If ice is unreachable, it blocks the call (fail-closed).
 func FilteredCLI(ice *ICEClient, input any, execute func() (string, error)) (string, error) {
 	// Scan input.
-	if input != nil {
-		raw, _ := json.Marshal(input)
-		injected, err := ice.IsInjection(string(raw))
-		if err != nil {
-			return "", fmt.Errorf("ice unavailable: %w", err)
-		}
-		if injected {
-			return "", fmt.Errorf("request blocked: prompt injection detected in input")
-		}
+	if err := scanInput(ice, input); err != nil {
+		return "", err
 	}
 
 	// Execute.
@@ -45,9 +41,9 @@ func FilteredCLI(ice *ICEClient, input any, execute func() (string, error)) (str
 
 	// Scan output.
 	if output != "" {
-		injected, err := ice.IsInjection(output)
-		if err != nil {
-			return "", fmt.Errorf("ice unavailable: %w", err)
+		injected, iceErr := ice.IsInjection(output)
+		if iceErr != nil {
+			return "", fmt.Errorf("ice unavailable: %w", iceErr)
 		}
 		if injected {
 			return "", fmt.Errorf("response blocked: prompt injection detected in output")

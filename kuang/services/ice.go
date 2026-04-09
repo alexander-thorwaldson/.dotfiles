@@ -1,5 +1,4 @@
-// Package handlers provides MCP tool handler wrappers including prompt
-// injection filtering via the ice classifier.
+// Package services implements the business logic behind kuang's API contracts.
 package services
 
 import (

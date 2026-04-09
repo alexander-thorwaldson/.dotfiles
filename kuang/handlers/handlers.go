@@ -5,7 +5,7 @@ import (
 	"github.com/zoobzio/dotfiles/kuang/wire"
 )
 
-var discover = rocco.GET[rocco.NoBody, wire.ToolListResponse]("/v1/tools", func(r *rocco.Request[rocco.NoBody]) (wire.ToolListResponse, error) {
+var discover = rocco.GET[rocco.NoBody, wire.ToolListResponse]("/v1/tools", func(_ *rocco.Request[rocco.NoBody]) (wire.ToolListResponse, error) {
 	// Return all registered endpoints as tool descriptions.
 	// Role-based filtering will be applied by middleware.
 	tools := []wire.ToolInfo{
