@@ -25,4 +25,5 @@ if test -f ~/.jack/operator/token
     set -gx JACK_HOMESERVER "http://localhost:6167"
 end
 
+fnm env | source
 starship init fish | source

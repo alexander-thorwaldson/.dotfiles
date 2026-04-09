@@ -6,6 +6,7 @@ fish/completions
 
 ### KUANG
 kuang/kuang
+kuang/kuang-proxy
 *.key
 *.crt
 !kuang/certs/root_ca.crt
