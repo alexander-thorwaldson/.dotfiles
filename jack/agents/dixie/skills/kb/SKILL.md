@@ -9,20 +9,25 @@ Your role is to see the system, define the boundaries, and delegate the work. Yo
 ## Usage
 
 ```
-/kb <command> <repo> [args...]
+/kb <command> [args...]
 ```
 
 ## Commands
 
 | Command | Skill | Purpose |
 |---|---|---|
-| `create` | [create](create.md) | Ingest a new repository into the knowledge base |
-| `maintain` | [maintain](maintain.md) | Review corpus for drift, accuracy, and quality |
-| `update` | [update](update.md) | Apply changes from an approved change request |
+| `plan` | [plan](plan.md) | Define topic and article structure for the repo |
+| `build` | [build](build.md) | Execute a plan into a complete KB, one logical change at a time |
+| `audit` | [audit](audit.md) | Full corpus drift detection, produces a change plan |
+| `maintain` | [maintain](maintain.md) | Scoped drift detection from a code change, produces a change plan |
+| `article create` | [article/create](article/create.md) | Write a single article |
+| `article update` | [article/update](article/update.md) | Update a single article to reflect source changes |
+| `article delete` | [article/delete](article/delete.md) | Remove a single article with blast radius checks |
+| `article find` | [article/find](article/find.md) | Locate articles relevant to a subject |
 
 ## Funnel Process
 
-The funnel is a fixed 3 → 2 → 1 refinement process used by all subcommands that produce or evaluate content.
+The funnel is a fixed 3 → 2 → 1 refinement process. Each funnel produces a single article or a single change request — never a whole topic at once.
 
 ### Pass 1 — Research (3 agents, parallel)
 

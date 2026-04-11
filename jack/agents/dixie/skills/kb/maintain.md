@@ -1,56 +1,59 @@
 # kb maintain
 
-Review existing knowledge base content for drift, accuracy, and quality.
+Scoped drift detection from a code change.
 
 ```
-/kb maintain <repo> [topics...]
+/kb maintain <diff>
 ```
 
-- `repo` — GitHub URL or `owner/repo` of the documented repository
-- `topics` — specific topic folders to review (e.g. `api data`). If omitted, review the full corpus.
+- `diff` — a PR reference, commit range, or diff describing what changed in the source
 
 ## Overview
 
-Maintain does not modify content. It produces a structured change request identifying what has drifted, what is inaccurate, and what is low quality.
+Maintain maps a specific code change to its KB impact. Unlike audit, which reviews the full corpus, maintain starts from a known change and determines which articles are affected. The output is a change plan consumed by `/kb build`.
 
 ## Phases
 
 ### Phase 1 — Study (you, serial)
 
-1. Clone the target repo and [Mycroft](https://github.com/alexander-thorwaldson/mycroft)
-2. Read the current state of the target repo — file tree, README, recent commits since `last_updated` dates in existing articles
-3. Read the existing KB content for the specified topics (or all topics if none specified)
+1. Read the diff — understand what changed, what files were touched, what behavior shifted
+2. Map the changed files against `sources` fields in existing KB articles to identify directly affected articles
+3. Check cross-references — articles that link to affected articles may also need updates
 4. Generate a codeword and create the workspace under `/tmp/<codeword>/`
 
-### Phase 2 — Change Discovery (parallel across topics)
+### Phase 2 — Impact Assessment (3 agents, parallel)
 
-For each topic under review, spawn a convergent funnel (see SKILL.md). This funnel produces change requests, not content.
-
-Each funnel agent receives:
-- The topic's existing KB articles
-- The topic's question set
+Spawn 3 agents, one per lens. Each agent receives:
+- The diff
+- The set of potentially affected articles (from Phase 1)
 - The topic placement table
-- Access to the target repo source
+- Access to the repo source (current state, post-change)
 
-Each agent must produce a structured change request covering:
+Each agent assesses impact:
 
 | Category | What to look for |
 |---|---|
-| **Drift** | Source code has changed but articles still describe the old behavior |
-| **Inaccuracy** | Articles that were wrong or are now wrong — incorrect descriptions, broken source references, outdated file paths |
-| **Gaps** | Concepts that exist in the source but have no article coverage |
-| **Redundancy** | Articles that overlap significantly or could be consolidated |
-| **Quality** | Weak source grounding, missing diagrams where they'd help, vague descriptions that should be specific |
+| **Direct drift** | Articles whose documented behavior no longer matches the source |
+| **Indirect drift** | Articles that cross-reference affected content or describe related concepts |
+| **New coverage** | Does the change introduce concepts that need new articles? |
+| **Removals** | Does the change delete functionality that an article documents? |
 
-Change requests must reference specific articles and specific source locations. "The API docs are outdated" is not actionable. "api/public-interfaces.md describes endpoint X at src/routes.ts:40 but that function was moved to src/api/handlers.ts:22" is.
+Findings must reference the specific lines in the diff that drive each recommendation.
 
-### Phase 3 — Funnel Convergence
+### Phase 3 — Edit (2 agents, parallel)
 
-The funnel follows the process defined in SKILL.md, but agents are refining change requests rather than articles.
+Two editor agents. Each must:
+1. Read the diff and affected articles **first**
+2. Read all 3 impact reports from `/tmp` **second**
+3. Consolidate — validate findings, cut false positives, merge duplicates
 
-Pass 2 agents study the repo source and existing KB first, forming their own understanding, then read prior change requests from `/tmp`. They produce a consolidated change request that validates, merges, or disputes prior findings.
+### Phase 4 — Change Plan (you, serial)
 
-### Phase 4 — Report (you, serial)
-
-1. Consolidate the final 2 change requests into one authoritative change request
-2. Write the final change request to `/tmp/<codeword>/change-request.md`
+1. Review both consolidated reports
+2. Synthesize into a change plan — each entry specifies:
+   - The article (existing path or proposed new path)
+   - The action (`create`, `update`, or `delete`)
+   - The scope (what needs to change, tied to the specific diff)
+   - For updates: what should not change
+3. Write the change plan to `/tmp/<codeword>/plan.md`
+4. Present the change plan to the user for review
