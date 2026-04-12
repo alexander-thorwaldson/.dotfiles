@@ -1,3 +1,6 @@
+### SECRETS 
+.github-token
+
 ### FISH
 fish_plugins
 fish_variables
